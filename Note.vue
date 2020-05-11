@@ -2,20 +2,20 @@
   <div
     v-if="isVisible"
     class="note"
-    v-bind:style="styleObject"
+    v-bind:style="{color: this.post.textcolor, backgroundColor: this.post.bgcolor}"
     @mouseover="hover = true"
     @mouseleave="hover = false"
     :class="{ highlight: hover }"
-    @click="expand()"
   >
     <!-- <h3 contenteditable>{{title}}</h3> -->
     <div class="header">
-      <input v-model="noteTitle" type="text" placeholder="New Title" />
-      <button v-if="isExpanded" v-on:click.stop="saveItem">❌</button>
-      <button v-on:click="removeItem">❌</button>
+      <!-- <input v-model="noteTitle" type="text" placeholder="New Title" @blur="updateNote" /> -->
+      <span v-bind:key="noteId">{{this.post.title}}</span>
+      <button v-on:click.stop="editItem">&#128394;</button>
+      <button v-on:click="removeItem">&#10005;</button>
     </div>
-    <!-- <p contenteditable>{{content}}</p> -->
-    <textarea v-model="noteContent" placeholder="New Content"></textarea>
+    <p v-bind:key="noteId">{{this.post.content}}</p>
+    <!-- <textarea v-model="noteContent" placeholder="New Content" @blur="updateNote"></textarea> -->
   </div>
 </template>
 <script>
@@ -29,13 +29,24 @@ export default {
       noteContent: this.post.content,
       noteId: this.post.id,
       styleObject: {
-        color: this.post.textColor,
-        backgroundColor: this.post.bgColor
+        color: this.post.textcolor,
+        backgroundColor: this.post.bgcolor
       }
     };
   },
   components: {},
   methods: {
+    updateNote() {
+      console.log("Inne i Update");
+      let note = {
+        id: this.noteId,
+        title: this.noteTitle,
+        content: this.noteContent
+      };
+      console.log(note);
+
+      this.$emit("updateNote", note);
+    },
     removeItem() {
       console.log("Remove this note");
       this.$emit("removeThisNote", this.noteId);
@@ -48,7 +59,7 @@ export default {
       console.log("textarea");
       //   this.$el.classList.remove("highlight");
     },
-    expand() {
+    editNote() {
       if (!this.isExpanded) {
         this.isExpanded = true;
         this.$emit("editModeViewEvent", this.noteId);
@@ -56,8 +67,13 @@ export default {
     },
     saveItem() {
       console.log("Editing finished");
-      this.isExpanded = false;
-      this.$emit("exitEditModeViewEvent", this.noteId);
+      // this.isExpanded = false;
+      // this.$emit("exitEditModeViewEvent", this.noteId);
+    },
+    editItem() {
+      console.log("Change to edit");
+      // this.isExpanded = false;
+      this.$emit("editModeViewEvent", this.noteId);
     },
     toggleHidden() {
       this.isVisible = !this.isVisible;
@@ -82,25 +98,26 @@ export default {
   font-size: 1.5rem;
 }
 
-.note input,
-.note textarea,
+.note span,
+.note p,
 .note button {
   width: 100%;
   background: transparent;
   border: none;
   resize: none;
+  color: inherit;
 }
-.note input,
-textarea {
+.header {
   color: inherit;
 }
 .note .header {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr auto auto auto;
   justify-content: flex-start;
   border-bottom: 1px solid black;
 }
 .note button {
+  font-size: 1.5rem;
 }
 
 .note.highlight {
